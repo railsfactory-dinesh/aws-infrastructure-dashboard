@@ -31,12 +31,6 @@ A sleek, modern, executive-ready dashboard built for DevOps Engineers, Project M
 
 ## 🚀 Quick Start (Local Development)
 
-### Prerequisites
-- **Node.js**: v18+ or v20+
-- **AWS CLI**: v2 installed and configured (`aws configure` or `~/.aws/credentials` or EC2 IAM Role)
-
-### Local Setup
-
 ```bash
 # Clone the repository
 git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
@@ -53,59 +47,56 @@ Access at **[http://localhost:3001](http://localhost:3001)**.
 
 ---
 
-## 🐳 Docker & Docker Compose Deployment (Recommended)
+## 🐳 Docker & Nginx Reverse Proxy Deployment (Port 80)
 
-You can easily run the application using **Docker Compose**:
+The application includes an **Nginx reverse proxy container** so you don't need to expose port 3001 directly to users:
 
-### 1. Run with Docker Compose
 ```bash
-# Clone repo & run container
-git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
-cd aws-infrastructure-dashboard
-
-# Start using Docker Compose
+# Start Dashboard + Nginx Reverse Proxy
 docker-compose up -d --build
 ```
-Access at **[http://localhost:3001](http://localhost:3001)**.
-
-### 2. Docker Compose Commands
-- **View Container Logs**: `docker-compose logs -f`
-- **Stop Container**: `docker-compose down`
-- **Rebuild & Restart**: `docker-compose up -d --build`
+Access the dashboard on standard **Port 80** at **`http://localhost`**.
 
 ---
 
-## ☁️ Production EC2 Deployment Guide
+## 🔒 Private Network & Secure Deployment Options (ALB / VPN)
 
-Follow these steps to deploy the application on an AWS EC2 instance:
+If your EC2 instance is running inside a **Private VPC Subnet** without a public IP:
 
-### Step 1: Launch an EC2 Instance
-- **AMI**: Ubuntu 22.04 LTS or Amazon Linux 2023.
-- **Instance Type**: `t3.micro` or `t3.small`.
-- **Security Group**: Allow Inbound HTTP traffic on port **3001** (or port 80/443 via Nginx reverse proxy).
+### Architecture 1: Private EC2 + AWS Internal Application Load Balancer (ALB)
+1. **EC2 Instance**: Place the instance in a Private Subnet.
+2. **Internal ALB**: Provision an **Internal Application Load Balancer (ALB)** in your VPC.
+3. **Target Group**: Point the ALB Target Group to the EC2 instance on **Port 80** (Nginx) or **Port 3001**.
+4. **Access**: Internal team members access `http://internal-devops-dashboard.yourdomain.internal` over VPN or Direct Connect.
 
-### Step 2: Attach IAM Role to EC2 (Best Practice)
-Attach an IAM Role to the EC2 instance with Read-Only AWS policies:
-- `ReadOnlyAccess` (or specific `ecs:Describe*`, `ec2:Describe*`, `rds:Describe*`, `s3:List*` permissions).
+### Architecture 2: Private EC2 + AWS Client VPN / OpenVPN Access
+1. **EC2 Instance**: Place the instance in a Private Subnet (e.g. Private IP `10.0.2.45`).
+2. **VPN Connection**: Team members connect to AWS Client VPN or OpenVPN Access Server.
+3. **Access**: Access the Private IP directly on Port 80 via browser (`http://10.0.2.45`).
 
-### Step 3: Install Docker & Docker Compose on EC2
+---
+
+## ☁️ Step-by-Step Production EC2 Deployment
+
+### Step 1: Attach IAM Role to EC2 Instance (Best Practice)
+Attach an IAM Role with read-only permissions (`ReadOnlyAccess` or specific ECS/EC2/RDS/S3 permissions) to the EC2 instance.
+
+### Step 2: Install Docker & Docker Compose
 ```bash
-# Ubuntu
 sudo apt-get update
 sudo apt-get install -y docker.io docker-compose
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
 ```
 
-### Step 4: Clone & Start Application
+### Step 3: Clone & Launch Container Stack
 ```bash
 git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
 cd aws-infrastructure-dashboard
 
-# Start the dashboard container
+# Launch Nginx + Dashboard stack
 docker-compose up -d --build
 ```
-Access your dashboard at **`http://<YOUR_EC2_PUBLIC_IP>:3001`**.
 
 ---
 
@@ -126,7 +117,10 @@ Minimum read-only permissions required for the IAM Role or Secrets Manager user:
 ```
 aws-infrastructure-dashboard/
 ├── Dockerfile              # Multi-stage Docker container build
-├── docker-compose.yml      # Docker Compose configuration
+├── docker-compose.yml      # Docker Compose with Nginx reverse proxy
+├── nginx/
+│   └── conf.d/
+│       └── default.conf    # Nginx reverse proxy configuration (Port 80)
 ├── README.md               # Project documentation & deployment guide
 ├── server.js               # Express API server with CORS & Secrets Manager support
 ├── lib/
@@ -138,7 +132,7 @@ aws-infrastructure-dashboard/
 │   ├── index.css           # Dark theme glassmorphism styling
 │   └── components/
 │       ├── Navbar.jsx      # Top header with profile selector & controls
-│       ├── KPICards.jsx    # Summary KPI cards
+│       ├── KPICards.jsx    # Clickable summary KPI cards
 │       ├── ECSOverview.jsx # ECS Clusters, Services & Task CPU/Mem specs
 │       ├── EC2Breakdown.jsx# Categorized EC2 hosts (ECS vs Standalone)
 │       ├── RDSOverview.jsx # Database instance types & storage breakdown
