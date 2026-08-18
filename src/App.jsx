@@ -33,8 +33,8 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export default function App() {
-  const [profiles, setProfiles] = useState(['default', 'pb', 'dinesh']);
-  const [selectedProfile, setSelectedProfile] = useState('pb');
+  const [profiles, setProfiles] = useState(['default', 'iam-role (EC2 metadata)']);
+  const [selectedProfile, setSelectedProfile] = useState('default');
   const [selectedRegion, setSelectedRegion] = useState('us-east-1');
   const [isMock, setIsMock] = useState(false);
   const [isClientMode, setIsClientMode] = useState(false);
@@ -52,11 +52,7 @@ export default function App() {
       .then(resData => {
         if (resData.profiles && resData.profiles.length > 0) {
           setProfiles(resData.profiles);
-          if (resData.profiles.includes('pb')) {
-            setSelectedProfile('pb');
-          } else {
-            setSelectedProfile(resData.profiles[0]);
-          }
+          setSelectedProfile(prev => resData.profiles.includes(prev) ? prev : resData.profiles[0]);
         }
       })
       .catch(err => console.warn('Profiles load error:', err));
