@@ -109,9 +109,11 @@ cd aws-infrastructure-dashboard
 # Pull latest fixes
 git pull origin main
 
-# Option A: Standard Docker Build & Up (Recommended)
+# Option A: Standard Docker Build & Launch (Recommended)
 docker build -t aws-infrastructure-dashboard-aws-dashboard .
-docker-compose up -d
+
+# Launch stack (Using Docker CLI Plugin or binary)
+docker compose up -d   # OR: docker-compose up -d
 
 # Option B: Install buildx plugin if using direct docker-compose build
 sudo apt-get install -y docker-buildx-plugin
