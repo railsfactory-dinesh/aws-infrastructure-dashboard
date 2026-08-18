@@ -7,6 +7,7 @@ import RDSOverview from './components/RDSOverview.jsx';
 import S3Overview from './components/S3Overview.jsx';
 import ExecutiveReportModal from './components/ExecutiveReportModal.jsx';
 import AuthRegionModal from './components/AuthRegionModal.jsx';
+import LoginPage from './components/LoginPage.jsx';
 import { 
   BarChart, 
   Bar, 
@@ -33,6 +34,12 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+// Helper: get auth headers for all API calls
+function authHeaders() {
+  const token = sessionStorage.getItem('auth_token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
 export default function App() {
   const [profiles, setProfiles] = useState(['iam-role (EC2 metadata)', 'default']);
   const [selectedProfile, setSelectedProfile] = useState('iam-role (EC2 metadata)');
@@ -40,25 +47,51 @@ export default function App() {
   const [isMock, setIsMock] = useState(false);
   const [isClientMode, setIsClientMode] = useState(false);
   
-  const [activeTab, setActiveTab] = useState('overview'); // overview, ecs, ec2, rds, s3
+  const [activeTab, setActiveTab] = useState('overview');
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(true);
 
-  // Fetch profiles on load
+  // Auth state — restore from sessionStorage on reload
+  const [authToken, setAuthToken] = useState(() => sessionStorage.getItem('auth_token') || '');
+  const [authUser, setAuthUser] = useState(() => sessionStorage.getItem('auth_user') || '');
+
+  const handleLogin = (token, user) => {
+    setAuthToken(token);
+    setAuthUser(user);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
+    setAuthToken('');
+    setAuthUser('');
+    setData(null);
+  };
+
+  // Show login page if not authenticated
+  if (!authToken) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  // Fetch profiles on load (with auth token)
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/profiles`, { credentials: 'same-origin' })
-      .then(res => res.json())
+    fetch(`${API_BASE_URL}/api/profiles`, { headers: authHeaders() })
+      .then(res => {
+        if (res.status === 401) { handleLogout(); return null; }
+        return res.json();
+      })
       .then(resData => {
+        if (!resData) return;
         if (resData.profiles && resData.profiles.length > 0) {
           setProfiles(resData.profiles);
           setSelectedProfile(prev => resData.profiles.includes(prev) ? prev : resData.profiles[0]);
         }
       })
       .catch(err => console.warn('Profiles load error:', err));
-  }, []);
+  }, [authToken]);
 
   // Fetch infrastructure data when profile, region or mock mode changes
   const loadData = (overrideProfile, overrideRegion) => {
@@ -70,7 +103,7 @@ export default function App() {
 
     const url = `${API_BASE_URL}/api/infrastructure?profile=${encodeURIComponent(prof)}&region=${encodeURIComponent(reg)}&mock=${isMock}`;
     
-    fetch(url, { credentials: 'same-origin' })
+    fetch(url, { headers: authHeaders() })
       .then(res => {
         // Always parse JSON even on error responses
         return res.json().then(body => ({ ok: res.ok, status: res.status, body }));

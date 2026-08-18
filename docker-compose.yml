@@ -11,8 +11,8 @@ services:
       - PORT=3001
       - NODE_ENV=production
       - AWS_REGION=us-east-1
+      - AWS_PAGER=
     volumes:
-      # Mount host AWS credentials and config (read-only) for AWS CLI profiles
       - ~/.aws:/root/.aws:ro
 
   # Nginx Reverse Proxy (Port 80)
@@ -23,6 +23,5 @@ services:
     network_mode: "host"
     volumes:
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
     depends_on:
       - aws-dashboard
