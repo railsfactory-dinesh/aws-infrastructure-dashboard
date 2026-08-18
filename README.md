@@ -49,11 +49,7 @@ Access at **[http://localhost:3001](http://localhost:3001)**.
 
 ## 🔒 Nginx HTTP Basic Authentication (Username & Password)
 
-The application includes **Nginx HTTP Basic Authentication** for secure internal web access:
-
-- **Default Pre-configured Users**:
-  - `admin` / `K9#vX2$mP7!zQ4@w`
-  - `devops` / `K9#vX2$mP7!zQ4@w`
+The application includes **Nginx HTTP Basic Authentication** for secure internal web access.
 
 ### How to Change or Add Passwords:
 Generate htpasswd credentials using `openssl` or `htpasswd` and update `./nginx/.htpasswd`:
