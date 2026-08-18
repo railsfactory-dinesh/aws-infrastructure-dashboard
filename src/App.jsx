@@ -49,7 +49,7 @@ export default function App() {
 
   // Fetch profiles on load
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/profiles`)
+    fetch(`${API_BASE_URL}/api/profiles`, { credentials: 'same-origin' })
       .then(res => res.json())
       .then(resData => {
         if (resData.profiles && resData.profiles.length > 0) {
@@ -61,13 +61,16 @@ export default function App() {
   }, []);
 
   // Fetch infrastructure data when profile, region or mock mode changes
-  const loadData = () => {
+  const loadData = (overrideProfile, overrideRegion) => {
     setLoading(true);
     setError(null);
 
-    const url = `${API_BASE_URL}/api/infrastructure?profile=${encodeURIComponent(selectedProfile)}&region=${encodeURIComponent(selectedRegion)}&mock=${isMock}`;
+    const prof = overrideProfile || selectedProfile;
+    const reg = overrideRegion || selectedRegion;
+
+    const url = `${API_BASE_URL}/api/infrastructure?profile=${encodeURIComponent(prof)}&region=${encodeURIComponent(reg)}&mock=${isMock}`;
     
-    fetch(url)
+    fetch(url, { credentials: 'same-origin' })
       .then(res => res.json())
       .then(resData => {
         if (resData.success && resData.data) {
