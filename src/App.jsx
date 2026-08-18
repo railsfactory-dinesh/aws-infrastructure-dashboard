@@ -71,17 +71,23 @@ export default function App() {
     const url = `${API_BASE_URL}/api/infrastructure?profile=${encodeURIComponent(prof)}&region=${encodeURIComponent(reg)}&mock=${isMock}`;
     
     fetch(url, { credentials: 'same-origin' })
-      .then(res => res.json())
-      .then(resData => {
-        if (resData.success && resData.data) {
-          setData(resData.data);
+      .then(res => {
+        // Always parse JSON even on error responses
+        return res.json().then(body => ({ ok: res.ok, status: res.status, body }));
+      })
+      .then(({ ok, status, body }) => {
+        if (body.success && body.data) {
+          setData(body.data);
+          setError(null);
         } else {
-          setError(resData.error || 'Failed to fetch infrastructure data.');
+          const errMsg = body.error || body.hint || `HTTP ${status}: Failed to fetch AWS data.`;
+          setError(errMsg);
+          console.error('[Dashboard Error]', errMsg);
         }
       })
       .catch(err => {
         console.error('Fetch error:', err);
-        setError(`Connection error: ${err.message}`);
+        setError(`Connection error: ${err.message}. Is the backend running?`);
       })
       .finally(() => {
         setLoading(false);
