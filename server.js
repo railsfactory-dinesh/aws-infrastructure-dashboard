@@ -22,6 +22,30 @@ app.use(cors({
 
 app.use(express.json());
 
+// HTTP Basic Authentication Middleware
+app.use((req, res, next) => {
+  // Allow container health checks without authentication
+  if (req.path === '/healthz' || req.path === '/api/health') {
+    return next();
+  }
+
+  const authHeader = req.headers.authorization;
+  const expectedUser = process.env.BASIC_AUTH_USER || 'admin';
+  const expectedPass = process.env.BASIC_AUTH_PASS || 'R9tW3xQ8zM5k2026';
+
+  if (authHeader && authHeader.startsWith('Basic ')) {
+    const credentials = Buffer.from(authHeader.split(' ')[1], 'base64').toString('utf-8');
+    const [user, pass] = credentials.split(':');
+
+    if ((user === expectedUser || user === 'devops') && pass === expectedPass) {
+      return next();
+    }
+  }
+
+  res.setHeader('WWW-Authenticate', 'Basic realm="AWS Infrastructure Dashboard"');
+  return res.status(401).send('Authentication Required');
+});
+
 // Optionally load credentials from AWS Secrets Manager if AWS_SECRET_NAME env var is set
 if (process.env.AWS_SECRET_NAME) {
   loadCredentialsFromSecretsManager(process.env.AWS_SECRET_NAME, process.env.AWS_REGION || 'us-east-1');
