@@ -69,7 +69,7 @@ If your EC2 instance is running inside a **Private VPC Subnet** without a public
 1. **EC2 Instance**: Place the instance in a Private Subnet.
 2. **Internal ALB**: Provision an **Internal Application Load Balancer (ALB)** in your VPC.
 3. **Target Group**: Point the ALB Target Group to the EC2 instance on **Port 80** (Nginx) or **Port 3001**.
-4. **Access**: Internal team members access `http://internal-devops-dashboard.yourdomain.internal` over VPN or Direct Connect.
+4. **Access**: Internal team members access `http://internal-devops-dashboard.pb.internal` over VPN or Direct Connect.
 
 ### Architecture 2: Private EC2 + AWS Client VPN / OpenVPN Access
 1. **EC2 Instance**: Place the instance in a Private Subnet (e.g. Private IP `10.0.2.45`).
