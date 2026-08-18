@@ -29,61 +29,83 @@ A sleek, modern, executive-ready dashboard built for DevOps Engineers, Project M
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
 - **Node.js**: v18+ or v20+
 - **AWS CLI**: v2 installed and configured (`aws configure` or `~/.aws/credentials` or EC2 IAM Role)
 
-### Installation
+### Local Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/aws-infrastructure-dashboard.git
+git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
 cd aws-infrastructure-dashboard
 
 # Install dependencies
 npm install
+
+# Build & Start Server
+npm run build
+npm start
+```
+Access at **[http://localhost:3001](http://localhost:3001)**.
+
+---
+
+## 🐳 Docker & Docker Compose Deployment (Recommended)
+
+You can easily run the application using **Docker Compose**:
+
+### 1. Run with Docker Compose
+```bash
+# Clone repo & run container
+git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
+cd aws-infrastructure-dashboard
+
+# Start using Docker Compose
+docker-compose up -d --build
+```
+Access at **[http://localhost:3001](http://localhost:3001)**.
+
+### 2. Docker Compose Commands
+- **View Container Logs**: `docker-compose logs -f`
+- **Stop Container**: `docker-compose down`
+- **Rebuild & Restart**: `docker-compose up -d --build`
+
+---
+
+## ☁️ Production EC2 Deployment Guide
+
+Follow these steps to deploy the application on an AWS EC2 instance:
+
+### Step 1: Launch an EC2 Instance
+- **AMI**: Ubuntu 22.04 LTS or Amazon Linux 2023.
+- **Instance Type**: `t3.micro` or `t3.small`.
+- **Security Group**: Allow Inbound HTTP traffic on port **3001** (or port 80/443 via Nginx reverse proxy).
+
+### Step 2: Attach IAM Role to EC2 (Best Practice)
+Attach an IAM Role to the EC2 instance with Read-Only AWS policies:
+- `ReadOnlyAccess` (or specific `ecs:Describe*`, `ec2:Describe*`, `rds:Describe*`, `s3:List*` permissions).
+
+### Step 3: Install Docker & Docker Compose on EC2
+```bash
+# Ubuntu
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
 ```
 
----
+### Step 4: Clone & Start Application
+```bash
+git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
+cd aws-infrastructure-dashboard
 
-## ☁️ Dual Deployment Support: S3 Static & EC2 Hosting
-
-The dashboard supports **both** S3 static web hosting and EC2 instance deployments out of the box:
-
-### Architecture 1: Deploying Frontend to AWS S3 + Backend API on EC2
-
-1. **Build Frontend with Backend API URL**:
-   Set `VITE_API_BASE_URL` to point to your backend API server running on EC2:
-   ```bash
-   VITE_API_BASE_URL="http://your-ec2-backend-ip:3001" npm run build
-   ```
-2. **Deploy to S3 Bucket**:
-   Sync the built `dist/` directory to your S3 bucket:
-   ```bash
-   aws s3 sync dist/ s3://your-s3-dashboard-bucket --delete
-   ```
-3. **Run Backend API on EC2**:
-   ```bash
-   CORS_ORIGIN="http://your-s3-dashboard-bucket.s3-website-us-east-1.amazonaws.com" AWS_SECRET_NAME="my-read-only-aws-credentials" npm start
-   ```
-
----
-
-### Architecture 2: Deploying Full-Stack on an AWS EC2 Instance (Recommended)
-
-1. **Deploy Repository to EC2**:
-   Clone the code onto your EC2 instance.
-2. **Configure Authentication**:
-   - **Option A (IAM Role - Best Practice)**: Attach an IAM Role with read-only permissions (`ReadOnlyAccess`) to the EC2 instance. The server automatically uses instance metadata (IMDS)—**no hardcoded access keys needed!**
-   - **Option B (AWS Secrets Manager)**: Pass environment variable `AWS_SECRET_NAME="my-read-only-secret"`. The server fetches the access keys dynamically on startup.
-3. **Start Server**:
-   ```bash
-   npm run build
-   npm start
-   ```
-   Open **`http://<EC2-Public-IP>:3001`**.
+# Start the dashboard container
+docker-compose up -d --build
+```
+Access your dashboard at **`http://<YOUR_EC2_PUBLIC_IP>:3001`**.
 
 ---
 
@@ -103,7 +125,9 @@ Minimum read-only permissions required for the IAM Role or Secrets Manager user:
 
 ```
 aws-infrastructure-dashboard/
-├── README.md               # Project documentation & dual deployment guide
+├── Dockerfile              # Multi-stage Docker container build
+├── docker-compose.yml      # Docker Compose configuration
+├── README.md               # Project documentation & deployment guide
 ├── server.js               # Express API server with CORS & Secrets Manager support
 ├── lib/
 │   ├── awsFetcher.js       # AWS CLI wrapper & Secrets Manager integration

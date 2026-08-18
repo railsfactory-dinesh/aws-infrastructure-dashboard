@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  aws-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aws-devops-dashboard
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - AWS_REGION=us-east-1
+      # Optional: Set AWS Secret Name if using AWS Secrets Manager
+      # - AWS_SECRET_NAME=my-read-only-aws-secret
+      # Optional: Set default AWS profile name
+      # - AWS_PROFILE=default
+    volumes:
+      # Mount host AWS credentials and config (read-only) for AWS CLI profiles
+      - ~/.aws:/root/.aws:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/profiles"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
