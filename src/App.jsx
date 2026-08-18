@@ -6,6 +6,7 @@ import EC2Breakdown from './components/EC2Breakdown.jsx';
 import RDSOverview from './components/RDSOverview.jsx';
 import S3Overview from './components/S3Overview.jsx';
 import ExecutiveReportModal from './components/ExecutiveReportModal.jsx';
+import AuthRegionModal from './components/AuthRegionModal.jsx';
 import { 
   BarChart, 
   Bar, 
@@ -33,8 +34,8 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export default function App() {
-  const [profiles, setProfiles] = useState(['default', 'iam-role (EC2 metadata)']);
-  const [selectedProfile, setSelectedProfile] = useState('default');
+  const [profiles, setProfiles] = useState(['iam-role (EC2 metadata)', 'default']);
+  const [selectedProfile, setSelectedProfile] = useState('iam-role (EC2 metadata)');
   const [selectedRegion, setSelectedRegion] = useState('us-east-1');
   const [isMock, setIsMock] = useState(false);
   const [isClientMode, setIsClientMode] = useState(false);
@@ -44,6 +45,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(true);
 
   // Fetch profiles on load
   useEffect(() => {
@@ -348,6 +350,19 @@ export default function App() {
         isOpen={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
         data={data}
+      />
+
+      {/* Auth & Region Setup Modal */}
+      <AuthRegionModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        profiles={profiles}
+        currentProfile={selectedProfile}
+        currentRegion={selectedRegion}
+        onConfirm={(prof, reg) => {
+          setSelectedProfile(prof);
+          setSelectedRegion(reg);
+        }}
       />
 
     </div>
