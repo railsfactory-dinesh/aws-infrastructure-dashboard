@@ -71,14 +71,10 @@ export default function App() {
     setData(null);
   };
 
-  // Show login page if not authenticated
-  if (!authToken) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
-  // Fetch profiles on load (with auth token)
+  // Fetch profiles on load (with auth token) — runs only when authenticated
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/profiles`, { headers: authHeaders() })
+    if (!authToken) return;
+    fetch(`${API_BASE_URL}/api/profiles`, { headers: { 'Authorization': `Bearer ${authToken}` } })
       .then(res => {
         if (res.status === 401) { handleLogout(); return null; }
         return res.json();
@@ -93,22 +89,25 @@ export default function App() {
       .catch(err => console.warn('Profiles load error:', err));
   }, [authToken]);
 
-  // Fetch infrastructure data when profile, region or mock mode changes
+  // Load infrastructure data
   const loadData = (overrideProfile, overrideRegion) => {
     setLoading(true);
     setError(null);
 
     const prof = overrideProfile || selectedProfile;
     const reg = overrideRegion || selectedRegion;
+    const token = sessionStorage.getItem('auth_token');
 
     const url = `${API_BASE_URL}/api/infrastructure?profile=${encodeURIComponent(prof)}&region=${encodeURIComponent(reg)}&mock=${isMock}`;
-    
-    fetch(url, { headers: authHeaders() })
+
+    fetch(url, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} })
       .then(res => {
-        // Always parse JSON even on error responses
-        return res.json().then(body => ({ ok: res.ok, status: res.status, body }));
+        if (res.status === 401) { handleLogout(); return null; }
+        return res.json().then(body => ({ status: res.status, body }));
       })
-      .then(({ ok, status, body }) => {
+      .then(result => {
+        if (!result) return;
+        const { status, body } = result;
         if (body.success && body.data) {
           setData(body.data);
           setError(null);
@@ -120,16 +119,21 @@ export default function App() {
       })
       .catch(err => {
         console.error('Fetch error:', err);
-        setError(`Connection error: ${err.message}. Is the backend running?`);
+        setError(`Connection error: ${err.message}`);
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   };
 
+  // Fetch infrastructure data when profile/region/mock changes — only when authenticated
   useEffect(() => {
+    if (!authToken) return;
     loadData();
-  }, [selectedProfile, selectedRegion, isMock]);
+  }, [selectedProfile, selectedRegion, isMock, authToken]);
+
+  // Conditionally render LoginPage after ALL hooks are declared
+  if (!authToken) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
 
   const summary = data?.summary || {};
   const ecsData = data?.ecs || {};
