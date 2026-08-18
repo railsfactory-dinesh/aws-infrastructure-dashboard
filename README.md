@@ -47,15 +47,21 @@ Access at **[http://localhost:3001](http://localhost:3001)**.
 
 ---
 
-## 🐳 Docker & Nginx Reverse Proxy Deployment (Port 80)
+## 🔒 Nginx HTTP Basic Authentication (Username & Password)
 
-The application includes an **Nginx reverse proxy container** so you don't need to expose port 3001 directly to users:
+The application includes **Nginx HTTP Basic Authentication** for secure internal web access:
 
+- **Default Pre-configured Users**:
+  - `admin` / `password123`
+  - `devops` / `password123`
+
+### How to Change or Add Passwords:
+Generate htpasswd credentials using `openssl` or `htpasswd` and update `./nginx/.htpasswd`:
 ```bash
-# Start Dashboard + Nginx Reverse Proxy
-docker-compose up -d --build
+# Add a new user (e.g., username: pm_lead, password: mysecurepassword)
+htpasswd -b ./nginx/.htpasswd pm_lead mysecurepassword
 ```
-Access the dashboard on standard **Port 80** at **`http://localhost`**.
+When team members open `http://<EC2-IP>` over VPN, the browser prompts for Username & Password before rendering any AWS data.
 
 ---
 
