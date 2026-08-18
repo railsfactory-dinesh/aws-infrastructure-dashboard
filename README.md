@@ -52,8 +52,8 @@ Access at **[http://localhost:3001](http://localhost:3001)**.
 The application includes **Nginx HTTP Basic Authentication** for secure internal web access:
 
 - **Default Pre-configured Users**:
-  - `admin` / `password123`
-  - `devops` / `password123`
+  - `admin` / `K9#vX2$mP7!zQ4@w`
+  - `devops` / `K9#vX2$mP7!zQ4@w`
 
 ### How to Change or Add Passwords:
 Generate htpasswd credentials using `openssl` or `htpasswd` and update `./nginx/.htpasswd`:
