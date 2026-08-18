@@ -40,6 +40,7 @@ COPY --from=builder /app/dist ./dist
 # Environment configuration
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV AWS_PAGER=""
 
 EXPOSE 3001
 
