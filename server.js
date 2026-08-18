@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
-import { getAwsProfiles, fetchInfrastructureData, loadCredentialsFromSecretsManager } from './lib/awsFetcher.js';
+import { getAwsProfiles, fetchInfrastructureData } from './lib/awsFetcher.js';
 import { getMockInfrastructureData } from './lib/mockData.js';
 import { generateExecutiveReport } from './lib/reportGenerator.js';
 
@@ -47,10 +47,7 @@ app.use((req, res, next) => {
   return res.status(401).send('Authentication Required');
 });
 
-// Optionally load credentials from AWS Secrets Manager if AWS_SECRET_NAME env var is set
-if (process.env.AWS_SECRET_NAME) {
-  loadCredentialsFromSecretsManager(process.env.AWS_SECRET_NAME, process.env.AWS_REGION || 'us-east-1');
-}
+// AWS Secrets Manager support removed — using EC2 IAM Role (IMDS) directly
 
 // Serve static frontend build
 const distPath = path.join(__dirname, 'dist');
