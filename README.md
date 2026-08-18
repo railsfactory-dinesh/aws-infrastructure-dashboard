@@ -94,7 +94,15 @@ sudo usermod -aG docker $USER
 git clone git@github.com:railsfactory-dinesh/aws-infrastructure-dashboard.git
 cd aws-infrastructure-dashboard
 
-# Launch Nginx + Dashboard stack
+# Pull latest fixes
+git pull origin main
+
+# Option A: Standard Docker Build & Up (Recommended)
+docker build -t aws-infrastructure-dashboard-aws-dashboard .
+docker-compose up -d
+
+# Option B: Install buildx plugin if using direct docker-compose build
+sudo apt-get install -y docker-buildx-plugin
 docker-compose up -d --build
 ```
 
