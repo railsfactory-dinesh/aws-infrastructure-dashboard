@@ -9,21 +9,34 @@ export default function ExecutiveReportModal({ isOpen, onClose, data }) {
   if (!isOpen) return null;
 
   const handlePrintOrDownload = () => {
+    const token = sessionStorage.getItem('auth_token');
+
     fetch(`${API_BASE_URL}/api/export-report`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ data, clientName })
     })
-      .then(res => res.text())
+      .then(res => {
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        return res.text();
+      })
       .then(html => {
         const win = window.open('', '_blank');
         if (win) {
           win.document.write(html);
           win.document.close();
-          setTimeout(() => win.print(), 500);
+          setTimeout(() => win.print(), 600);
+        } else {
+          alert('Please allow popups for this site to generate the PDF report.');
         }
       })
-      .catch(err => console.error('Export report error:', err));
+      .catch(err => {
+        console.error('Export report error:', err);
+        alert(`Failed to generate report: ${err.message}`);
+      });
   };
 
   const summary = data?.summary || {};
