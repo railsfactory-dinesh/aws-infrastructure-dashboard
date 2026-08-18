@@ -153,12 +153,11 @@ app.get('/api/infrastructure', async (req, res) => {
   console.log(`[API] Fetching LIVE AWS data for profile '${profile}' in region '${region}'...`);
 
   try {
-    const data = fetchInfrastructureData(profile, region);
-    console.log(`[API] SUCCESS - EC2: ${data.summary?.totalEc2 ?? 0}, ECS Clusters: ${data.summary?.totalClusters ?? 0}, RDS: ${data.summary?.totalRds ?? 0}, S3: ${data.summary?.totalS3Buckets ?? 0}`);
+    const data = await fetchInfrastructureData(profile, region);
+    console.log(`[API] SUCCESS - EC2: ${data.summary?.totalEc2 ?? 0}, ECS: ${data.summary?.totalClusters ?? 0}, RDS: ${data.summary?.totalRds ?? 0}, S3: ${data.summary?.totalS3Buckets ?? 0}`);
     res.json({ success: true, data });
   } catch (error) {
     console.error(`[API ERROR] Live AWS query failed for profile '${profile}': ${error.message}`);
-    // Return error to frontend instead of silently falling back to mock
     res.status(500).json({
       success: false,
       error: error.message,
