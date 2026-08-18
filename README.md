@@ -83,8 +83,16 @@ Attach an IAM Role with read-only permissions (`ReadOnlyAccess` or specific ECS/
 
 ### Step 2: Install Docker & Docker Compose
 ```bash
+# For Amazon Linux 2023 (AL2023)
+sudo dnf update -y
+sudo dnf install -y docker docker-compose-plugin
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user
+newgrp docker
+
+# For Ubuntu / Debian
 sudo apt-get update
-sudo apt-get install -y docker.io docker-compose
+sudo apt-get install -y docker.io docker-compose docker-buildx-plugin
 sudo systemctl enable --now docker
 sudo usermod -aG docker $USER
 ```
